@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-metrics
+  namespace: strimzi
+data:
+  kafka-metrics-config.yml: |
+    lowercaseOutputName: true
+    rules:
+      - pattern: kafka.server<type=FetcherMetrics, name=BytesPerSec, clientId=(\w+)><>(Count|OneMinuteRate)
+        name: kafka_server_fetcher_bytes_per_sec_$2
+      - pattern: kafka.server<type=BrokerTopicMetrics, name=(\w+)><>(Count|OneMinuteRate)
+        name: kafka_server_broker_topic_metrics_$1_$2
+      # add more rules if needed

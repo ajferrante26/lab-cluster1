@@ -1,0 +1,43 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: minio
+  namespace: logging
+spec:
+  interval: 1h
+  url: https://charts.min.io/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minio
+  namespace: logging
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: minio
+      version: "5.0.1"  # choose latest
+      sourceRef:
+        kind: HelmRepository
+        name: minio
+  values:
+    mode: standalone
+    replicas: 1
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: local-path
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    rootUser: minio
+    rootPassword: minio123
+    buckets:
+      - name: loki
+        policy: none
+        purge: false

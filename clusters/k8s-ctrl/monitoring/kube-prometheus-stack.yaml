@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "45.31.1"            # Use your installed version
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+  values:
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    prometheus:
+      service:
+        type: NodePort
+        nodePort: 30909
+      prometheusSpec:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+    alertmanager:
+      alertmanagerSpec:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+    grafana:
+      service:
+        type: NodePort
+        nodePort: 30080
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi

@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: strimzi-kafka
+  namespace: strimzi
+  labels:
+    release: kube-prometheus-stack   # This label is required by default Prometheus config
+spec:
+  selector:
+    matchLabels:
+      strimzi.io/name: kafka-cluster
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka-producer-test
+  namespace: strimzi
+spec:
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  containers:
+    - name: producer
+      namespace: strimzi
+      image: apache/kafka:4.3.1
+      command:
+        - /bin/bash
+        - -c
+        - |
+          for i in $(seq 1 5); do
+            echo "Kubernetes message $i from producer pod" | /opt/kafka/bin/kafka-console-producer.sh \
+              --bootstrap-server kafka-cluster-kafka-bootstrap.strimzi.svc.cluster.local:9092 \
+              --topic test
+            sleep 1
+          done

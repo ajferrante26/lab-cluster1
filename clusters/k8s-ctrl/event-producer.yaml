@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: event-producer
+  namespace: strimzi
+  labels:
+    app: event-producer
+spec:
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  containers:
+    - name: producer
+      image: python:3.11-slim
+      command:
+        - /bin/sh
+        - -c
+        - |
+          pip install kafka-python psutil >/dev/null 2>&1
+          python -u - <<EOF
+          import socket, time, json
+          from kafka import KafkaProducer
+          import psutil
+          producer = KafkaProducer(
+              bootstrap_servers='kafka-cluster-kafka-bootstrap.strimzi.svc.cluster.local:9092',
+              value_serializer=lambda v: json.dumps(v).encode('utf-8')
+          )
+          host = socket.gethostname()
+          while True:
+              cpu = psutil.cpu_percent(interval=1)
+              mem = psutil.virtual_memory().percent
+              producer.send('system-events', {'host': host, 'cpu': cpu, 'mem': mem, 'ts': time.time()})
+              time.sleep(5)
+          EOF

@@ -1,0 +1,6 @@
+envs:
+  config:
+    KAFKA_CLUSTERS_0_NAME: kafka-cluster
+    KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-cluster-kafka-bootstrap.strimzi.svc.cluster.local:9092
+nodeSelector:
+  kubernetes.io/arch: amd64

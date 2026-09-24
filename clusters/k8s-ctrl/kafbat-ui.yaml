@@ -1,0 +1,132 @@
+---
+# Source: kafka-ui/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kafbat-ui-kafka-ui
+  namespace: strimzi
+  labels:
+    helm.sh/chart: kafka-ui-1.6.5
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafbat-ui
+    app.kubernetes.io/version: "v1.5.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: kafka-ui/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafbat-ui-kafka-ui
+  namespace: strimzi
+  labels:
+    helm.sh/chart: kafka-ui-1.6.5
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafbat-ui
+    app.kubernetes.io/version: "v1.5.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-cluster-kafka-bootstrap.strimzi.svc.cluster.local:9092
+  KAFKA_CLUSTERS_0_NAME: kafka-cluster
+---
+# Source: kafka-ui/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafbat-ui-kafka-ui
+  namespace: strimzi
+  labels:
+    helm.sh/chart: kafka-ui-1.6.5
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafbat-ui
+    app.kubernetes.io/version: "v1.5.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30800
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafbat-ui
+---
+# Source: kafka-ui/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafbat-ui-kafka-ui
+  namespace: strimzi
+  labels:
+    helm.sh/chart: kafka-ui-1.6.5
+    app.kubernetes.io/name: kafka-ui
+    app.kubernetes.io/instance: kafbat-ui
+    app.kubernetes.io/version: "v1.5.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kafka-ui
+      app.kubernetes.io/instance: kafbat-ui
+  template:
+    metadata:
+      annotations:
+        checksum/config: b1f84520b942b66092ca1a3cafcb642b57e632d053e2e787dd3367a1b818c323
+        checksum/configFromValues: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+      labels:
+        app.kubernetes.io/name: kafka-ui
+        app.kubernetes.io/instance: kafbat-ui
+    spec:
+      serviceAccountName: kafbat-ui-kafka-ui
+      securityContext:
+        fsGroup: 2000
+      containers:
+        - name: kafka-ui
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: false
+            runAsGroup: 2000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          image: ghcr.io/kafbat/kafka-ui:v1.5.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: kafbat-ui-kafka-ui
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            failureThreshold: 5
+            periodSeconds: 40
+            timeoutSeconds: 10
+          resources:
+            {}
+      nodeSelector:
+        kubernetes.io/arch: amd64
